@@ -1,0 +1,57 @@
+version: '3.4'
+
+services:
+  inventory:
+    build:
+      context: .
+      dockerfile: Inventory/Dockerfile
+    ports:
+      - "5244:5244"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - inventory.database
+      - demo-rabbitmq
+
+  inventory.database:
+    image: "mcr.microsoft.com/mssql/server"
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "dusanPassword9&7!"
+      MSSQL_PID: "Express"
+    ports:
+      - "1436:1433"
+    volumes:
+      - inventory_data:/var/opt/mssql
+
+  user:
+    build:
+      context: .
+      dockerfile: User/Dockerfile
+    ports:
+      - "5167:5167"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - user.database
+      - demo-rabbitmq
+
+  user.database:
+    image: "mcr.microsoft.com/mssql/server"
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "dusanPassword9&7!"
+      MSSQL_PID: "Express"
+    ports:
+      - "1437:1433"
+    volumes:
+      - user_data:/var/opt/mssql
+
+  demo-rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 8088:15672
+
+volumes:
+  inventory_data:
+  user_data:
