@@ -24,7 +24,8 @@ public class ProductsController : ControllerBase
             new Product()
             {
                 Name = request.Name,
-                Description = request.Description
+                Description = request.Description,
+                Quantity = request.Quantity,
             },
             cancellationToken);
 
@@ -39,6 +40,6 @@ public class ProductsController : ControllerBase
         return Ok(
             products
                 .Select(p =>
-                    new GetProductResponse(p.Id, p.Name, p.Description)));
+                    new GetProductResponse(p.Id, p.Name, p.Description, p.Quantity)));
     }
 }
