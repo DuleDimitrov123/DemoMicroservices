@@ -1,5 +1,6 @@
 ﻿
 using DotNetCore.CAP;
+using MassTransit;
 using Messages;
 using MongoDB.Driver;
 
@@ -17,19 +18,28 @@ public class OrderRepository : IOrderRepository
     private readonly IMongoCollection<Entities.Order> _orders;
     private readonly IMongoClient _mongoClient;
     private readonly ICapPublisher _capPublisher;
+    private readonly IPublishEndpoint _publisher;
 
-    public OrderRepository(IMongoClient mongoClient, ICapPublisher capPublisher)
+    public OrderRepository(IPublishEndpoint publisher, IMongoClient mongoClient, ICapPublisher capPublisher)
     {
         _orders = mongoClient.GetDatabase("OrderDb").GetCollection<Entities.Order>("Orders");
         _mongoClient = mongoClient;
         _capPublisher = capPublisher;
+        _publisher = publisher;
     }
 
     public async Task<string> Create(Entities.Order order, CancellationToken cancellationToken)
     {
         await _orders.InsertOneAsync(order, cancellationToken);
 
-        await _capPublisher.PublishAsync("order.created",
+        //await _publisher.Publish(new CreatedOrderEvent()
+        //{
+        //    Products = order.Products.Select(p => new ProductEvent() { Name = p.Name, ProductServiceId = p.ProductServiceId }).ToList(),
+        //    Username = order.Username,
+        //    UserServiceId = order.UserServiceId
+        //});
+
+        await _capPublisher.PublishAsync(Queue.OrderCreatedQueue,
             new CreatedOrderEvent()
             {
                 Products = order.Products.Select(p => new ProductEvent() { Name = p.Name, ProductServiceId = p.ProductServiceId }).ToList(),

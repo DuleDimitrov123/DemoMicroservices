@@ -1,3 +1,4 @@
+using MassTransit;
 using MongoDB.Driver;
 using Order.Repositories;
 
@@ -26,10 +27,28 @@ builder.Services.AddCap(options =>
 
     options.UseRabbitMQ(rabbitMQOptions =>
     {
+        rabbitMQOptions.ExchangeName = "order-created-topic-exchange";
+
         rabbitMQOptions.ConnectionFactoryOptions = factory =>
         {
             factory.Uri = new Uri(builder.Configuration.GetConnectionString("RabbitMQ"));
         };
+    });
+});
+
+builder.Services.AddMassTransit(config =>
+{
+    config.UsingRabbitMq((ctx, cfg) =>
+    {
+        var uri = new Uri(builder.Configuration.GetConnectionString("RabbitMQ"));
+
+        cfg.Host(uri, h =>
+        {
+            h.Username(uri.UserInfo.Split(':')[0]);
+            h.Password(uri.UserInfo.Split(':')[1]);
+        });
+
+        cfg.ConfigureEndpoints(ctx);
     });
 });
 

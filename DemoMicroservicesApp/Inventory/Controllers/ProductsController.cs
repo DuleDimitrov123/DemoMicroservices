@@ -45,12 +45,12 @@ public class ProductsController : ControllerBase
                     new GetProductResponse(p.Id, p.Name, p.Description, p.Quantity)));
     }
 
-    [HttpPost("CAPROUTE-createorder")]
-    [CapSubscribe("order.created")]
-    public async Task<ActionResult> CreateOrder(CreatedOrderEvent createdOrderEvent, CancellationToken cancellationToken)
-    {
-        await _productRepository.Update(createdOrderEvent.Products, cancellationToken);
+    //[HttpPost("CAPROUTE-createorder")]
+    //[CapSubscribe(Queue.OrderCreatedQueue)]
+    //public async Task<ActionResult> CreateOrder(CreatedOrderEvent createdOrderEvent, CancellationToken cancellationToken)
+    //{
+    //    await _productRepository.Update(createdOrderEvent.Products, cancellationToken);
 
-        return Ok();
-    }
+    //    return Ok();
+    //}
 }

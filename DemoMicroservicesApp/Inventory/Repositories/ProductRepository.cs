@@ -44,9 +44,8 @@ public class ProductRepository : IProductRepository
             if (product != null)
             {
                 product.Quantity--;
+                _dbContext.Products.Update(product);
             }
-
-            _dbContext.Products.Update(product);
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
