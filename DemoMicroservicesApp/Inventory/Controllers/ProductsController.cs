@@ -47,8 +47,10 @@ public class ProductsController : ControllerBase
 
     [HttpPost("CAPROUTE-createorder")]
     [CapSubscribe("order.created")]
-    public async Task<ActionResult> CreateOrder(CreatedOrderEvent createdOrderEvent)
+    public async Task<ActionResult> CreateOrder(CreatedOrderEvent createdOrderEvent, CancellationToken cancellationToken)
     {
+        await _productRepository.Update(createdOrderEvent.Products, cancellationToken);
+
         return Ok();
     }
 }
