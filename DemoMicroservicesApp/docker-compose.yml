@@ -59,6 +59,32 @@ services:
       interval: 2s
       retries: 10
 
+  order:
+    build:
+      context: .
+      dockerfile: Order/Dockerfile
+    ports:
+      - "5079:5079"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      order.database:
+        condition: service_healthy
+      demo-rabbitmq:
+        condition: service_healthy
+
+  order.database:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
   demo-rabbitmq:
     image: rabbitmq:3-management
     ports:
@@ -72,3 +98,4 @@ services:
 volumes:
   inventory_data:
   user_data:
+  mongo_data:

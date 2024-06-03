@@ -1,7 +1,9 @@
-﻿using Inventory.Controllers.Requests;
+﻿using DotNetCore.CAP;
+using Inventory.Controllers.Requests;
 using Inventory.Controllers.Responses;
 using Inventory.Entities;
 using Inventory.Repositories;
+using Messages;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Inventory.Controllers;
@@ -41,5 +43,12 @@ public class ProductsController : ControllerBase
             products
                 .Select(p =>
                     new GetProductResponse(p.Id, p.Name, p.Description, p.Quantity)));
+    }
+
+    [HttpPost("CAPROUTE-createorder")]
+    [CapSubscribe("order.created")]
+    public async Task<ActionResult> CreateOrder(CreatedOrderEvent createdOrderEvent)
+    {
+        return Ok();
     }
 }

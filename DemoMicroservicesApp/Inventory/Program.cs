@@ -18,6 +18,19 @@ builder.Services.AddDbContext<InventoryDbContext>(options =>
 
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
+builder.Services.AddCap(options =>
+{
+    options.UseEntityFramework<InventoryDbContext>();
+
+    options.UseRabbitMQ(options =>
+    {
+        options.ConnectionFactoryOptions = factory =>
+        {
+            factory.Uri = new Uri(builder.Configuration.GetConnectionString("RabbitMQ"));
+        };
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
