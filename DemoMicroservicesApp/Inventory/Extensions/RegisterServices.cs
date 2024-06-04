@@ -8,6 +8,8 @@ public static class RegisterServices
 {
     public static void AddCustomCap(this WebApplicationBuilder builder)
     {
+        builder.Services.AddTransient<ISubscriberService, SubscriberService>();
+
         var rabbitMqConfig = builder.Configuration.GetSection("RabbitMqConfig").Get<RabbitMqConfig>();
 
         builder.Services.Configure<RabbitMqConfig>(options =>
