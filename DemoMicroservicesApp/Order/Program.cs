@@ -1,5 +1,5 @@
-using MassTransit;
 using MongoDB.Driver;
+using Order.Extensions;
 using Order.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,39 +18,9 @@ builder.Services.AddSingleton<IMongoClient>(s =>
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 //CAP
-builder.Services.AddCap(options =>
-{
-    options.UseMongoDB(mongoDBOptions =>
-    {
-        mongoDBOptions.DatabaseConnection = builder.Configuration.GetConnectionString("MongoDb");
-    });
+builder.AddCustomCap();
 
-    options.UseRabbitMQ(rabbitMQOptions =>
-    {
-        rabbitMQOptions.ExchangeName = "order-created-topic-exchange";
-
-        rabbitMQOptions.ConnectionFactoryOptions = factory =>
-        {
-            factory.Uri = new Uri(builder.Configuration.GetConnectionString("RabbitMQ"));
-        };
-    });
-});
-
-builder.Services.AddMassTransit(config =>
-{
-    config.UsingRabbitMq((ctx, cfg) =>
-    {
-        var uri = new Uri(builder.Configuration.GetConnectionString("RabbitMQ"));
-
-        cfg.Host(uri, h =>
-        {
-            h.Username(uri.UserInfo.Split(':')[0]);
-            h.Password(uri.UserInfo.Split(':')[1]);
-        });
-
-        cfg.ConfigureEndpoints(ctx);
-    });
-});
+//builder.AddCustomMassTransit();
 
 var app = builder.Build();
 

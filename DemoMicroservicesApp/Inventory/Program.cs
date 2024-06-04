@@ -1,8 +1,7 @@
 using Inventory;
 using Inventory.Consumers;
+using Inventory.Extensions;
 using Inventory.Repositories;
-using MassTransit;
-using Messages;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,55 +21,9 @@ builder.Services.AddDbContext<InventoryDbContext>(options =>
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 // CAP
-//builder.Services.AddCap(options =>
-//{
-//    options.UseEntityFramework<InventoryDbContext>();
+//builder.AddCustomCap();
 
-//    options.UseRabbitMQ(options =>
-//    {
-//        options.ExchangeName = Queue.OrderCreatedQueue;
-
-//        options.ConnectionFactoryOptions = factory =>
-//        {
-//            factory.Uri = new Uri(builder.Configuration.GetConnectionString("RabbitMQ"));
-//        };
-//    });
-//});
-
-builder.Services.AddMassTransit(config =>
-{
-    config.AddConsumer<CreatedOrderEventConsumer>();
-
-    config.UsingRabbitMq((ctx, cfg) =>
-    {
-        var uri = new Uri(builder.Configuration.GetConnectionString("RabbitMQ"));
-
-        cfg.Host(uri, h =>
-        {
-            h.Username(uri.UserInfo.Split(':')[0]);
-            h.Password(uri.UserInfo.Split(':')[1]);
-        });
-
-        cfg.ReceiveEndpoint(Queue.OrderCreatedQueue, c =>
-        {
-            c.ConfigureConsumeTopology = false; // Prevents automatic binding to default exchange
-            c.ConfigureConsumer<CreatedOrderEventConsumer>(ctx);
-
-            c.ClearSerialization();
-            //c.ClearMessageDeserializers();
-
-            c.UseRawJsonSerializer();
-
-            c.Bind("order-created-topic-exchange", x =>
-            {
-                x.ExchangeType = "topic";
-                x.RoutingKey = "#"; // Adjust routing key as needed
-            });
-        });
-    });
-});
-
-builder.Services.AddScoped<CreatedOrderEventConsumer>();
+builder.AddCustomMassTransit();
 
 var app = builder.Build();
 
