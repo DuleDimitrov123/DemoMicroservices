@@ -8,13 +8,18 @@ public static class RegisterServices
 {
     public static void AddCustomCap(this WebApplicationBuilder builder)
     {
+        var rabbitMqConfig = builder.Configuration.GetSection("RabbitMqConfig").Get<RabbitMqConfig>();
+
+        builder.Services.Configure<RabbitMqConfig>(options =>
+            builder.Configuration.GetSection("RabbitMqConfig").Bind(options));
+
         builder.Services.AddCap(options =>
         {
             options.UseEntityFramework<InventoryDbContext>();
 
             options.UseRabbitMQ(options =>
             {
-                options.ExchangeName = Queue.OrderCreatedQueue;
+                options.ExchangeName = rabbitMqConfig.ExchangeName;
 
                 options.ConnectionFactoryOptions = factory =>
                 {
@@ -26,6 +31,11 @@ public static class RegisterServices
 
     public static void AddCustomMassTransit(this WebApplicationBuilder builder)
     {
+        var rabbitMqConfig = builder.Configuration.GetSection("RabbitMqConfig").Get<RabbitMqConfig>();
+
+        builder.Services.Configure<RabbitMqConfig>(options =>
+            builder.Configuration.GetSection("RabbitMqConfig").Bind(options));
+
         builder.Services.AddMassTransit(config =>
         {
             config.AddConsumer<CreatedOrderEventConsumer>();
@@ -50,10 +60,10 @@ public static class RegisterServices
 
                     c.UseRawJsonSerializer();
 
-                    c.Bind("order-created-topic-exchange", x =>
+                    c.Bind(rabbitMqConfig.ExchangeName, x =>
                     {
-                        x.ExchangeType = "topic";
-                        x.RoutingKey = "#";
+                        x.ExchangeType = rabbitMqConfig.ExchangeType; // default is fanout
+                        x.RoutingKey = rabbitMqConfig.RoutingKey;
                     });
                 });
             });

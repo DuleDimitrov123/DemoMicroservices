@@ -1,4 +1,5 @@
 ﻿using MassTransit;
+using Order.Config;
 
 namespace Order.Extensions;
 
@@ -6,8 +7,17 @@ public static class RegisterServices
 {
     public static void AddCustomCap(this WebApplicationBuilder builder)
     {
+        var rabbitMqConfig = builder.Configuration.GetSection("RabbitMqConfig").Get<RabbitMqConfig>();
+
+        var capConfig = builder.Configuration.GetSection("CapConfig").Get<CapConfig>();
+
         builder.Services.AddCap(options =>
         {
+            options.FailedRetryInterval = capConfig.FailedRetryIntervalSeconds;
+            options.FailedRetryCount = capConfig.FailedRetryCount;
+            options.SucceedMessageExpiredAfter = capConfig.SucceedMessageExpirationSeconds;
+            options.FailedMessageExpiredAfter = capConfig.FailedMessageExpirationSeconds;
+
             options.UseMongoDB(mongoDBOptions =>
             {
                 mongoDBOptions.DatabaseConnection = builder.Configuration.GetConnectionString("MongoDb");
@@ -15,7 +25,7 @@ public static class RegisterServices
 
             options.UseRabbitMQ(rabbitMQOptions =>
             {
-                rabbitMQOptions.ExchangeName = "order-created-topic-exchange";
+                rabbitMQOptions.ExchangeName = rabbitMqConfig.ExchangeName;
 
                 rabbitMQOptions.ConnectionFactoryOptions = factory =>
                 {
